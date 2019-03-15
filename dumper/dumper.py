@@ -8,6 +8,8 @@ def save_dump(data, path):
     pickle.dump(data, f)
     f.close()
 
+columns = ['husets_elforbrug', 'antennesignal']
+
 mydb = mysql.connector.connect(
     host="localhost",
     user="python",
@@ -17,7 +19,7 @@ mydb = mysql.connector.connect(
 
 my_cursor = mydb.cursor()
 
-my_cursor.execute('SELECT opkdato, husets_elforbrug FROM opkald2 WHERE anlaegId = 2000799148 ORDER BY opkdato ASC')
+my_cursor.execute('SELECT opkdato, ' + ' '.join(columns) + ' FROM opkald2 WHERE anlaegId = 2000799148 ORDER BY opkdato ASC')
 
 result = my_cursor.fetchall()
 
@@ -25,7 +27,9 @@ array = []
 for res in result:
     date = res[0]
     values = dict()
-    values["husets_elforbrug"] = res[1]
+    i = 0
+    for column in columns:
+        values[column] = res[1]
     array.append(Entry(date, values))
 
 save_dump(array, 'data/2000799148_husets')
