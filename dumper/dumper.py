@@ -1,7 +1,7 @@
 import mysql.connector
 import json
 import pickle
-from lib.entry import Entry
+from model.entry import Entry
 
 def save_dump(data, path):
     f = open(path, "wb")
