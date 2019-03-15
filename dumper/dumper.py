@@ -28,7 +28,7 @@ for res in result:
     values["husets_elforbrug"] = res[1]
     array.append(Entry(date, values))
 
-save_dump(array, 'data/data')
+save_dump(array, 'data/2000799148_husets')
 
 
 
