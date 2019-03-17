@@ -3,15 +3,26 @@ import datetime as dt
 import numpy as np
 import pickle as rick
 from model.entry import Entry
-data = rick.load(open("./data/2000799148_husets", "rb"))
+import sys
+import os
+data = rick.load(open(sys.argv[1], "rb"))
+plotpath = sys.argv[1] + "_plots";
+if not os.path.isdir(plotpath):
+    os.mkdir(plotpath);
 datelist = []
-valuelist = []
 for entry in data:
 	datelist.append(entry.date)
-	valuelist.append(entry.values['husets_elforbrug'])
 
-l = plt.plot(datelist, valuelist)
-plt.setp(l, markersize=5)
-plt.setp(l, markerfacecolor='C0')
-plt.xticks(rotation='vertical');
-plt.show()
+for key in entry.values:
+    valuelist = []
+    for entry in data:
+        valuelist.append(entry.values[key])
+    plot = plt.plot(datelist, valuelist)
+    plt.setp(plot, markersize=5)
+    plt.setp(plot, markerfacecolor='C0')
+    plt.suptitle(key)
+    plt.xticks(rotation='vertical')
+    plt.savefig(sys.argv[1] + "_plots/" + key +".png")
+    plt.clf()
+
+
