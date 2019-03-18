@@ -6,19 +6,26 @@ from model.entry import Entry
 import sys
 import os
 data = rick.load(open(sys.argv[1], "rb"))
-plotpath = sys.argv[1] + "_plots";
+plotpath = sys.argv[1] + "_plots"
 if not os.path.isdir(plotpath):
-    os.mkdir(plotpath);
+    os.mkdir(plotpath)
 datelist = []
 for entry in data:
-	datelist.append(entry.date)
+    datelist.append(entry.date)
 
 for key in entry.values:
+    print(key)
     valuelist = []
     for entry in data:
-        valuelist.append(entry.values[key])
-    plot = plt.plot(datelist, valuelist)
-    plt.setp(plot, markersize=5)
+        if isinstance(entry.values[key], list):
+            val = entry.values[key][0]
+        else:
+            val = entry.values[key]
+        if val == None:
+            val = 0
+        valuelist.append(val)
+    plot = plt.plot(datelist, valuelist,'ro')
+    plt.setp(plot, markersize=1)
     plt.setp(plot, markerfacecolor='C0')
     plt.suptitle(key)
     plt.xticks(rotation='vertical')
