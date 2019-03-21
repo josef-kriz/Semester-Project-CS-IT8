@@ -11,18 +11,24 @@ if not os.path.isdir(plotpath):
     os.mkdir(plotpath)
 datelist = []
 for entry in data:
+    if entry.is_error:
+        continue
     datelist.append(entry.date)
 
-for key in entry.values:
+for key in data[0].values:
     print(key)
     valuelist = []
     for entry in data:
+        if entry.is_error:
+            if entry.values['error_code'] == 102:
+                plt.axvline(x=entry.date)
+            continue
         if isinstance(entry.values[key], list):
             val = entry.values[key][0]
         else:
             val = entry.values[key]
         if val == None:
-            val = 0
+            val = -999999
         valuelist.append(val)
     plot = plt.plot(datelist, valuelist,'ro')
     plt.setp(plot, markersize=1)
