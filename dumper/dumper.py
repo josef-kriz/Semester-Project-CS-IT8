@@ -42,7 +42,19 @@ for res in result:
         i = i + 1
     array.append(Entry(date, values))
 
-print(array[32].values)
+my_cursor.execute('SELECT dato, haendelse, effekt FROM anlaegshaendelser WHERE anlaeg_id = ' + str(machineID) + ' ORDER BY dato ASC')
+
+result = my_cursor.fetchall()
+
+for res in result:
+    date = res[0]
+    values = dict()
+    values['error_code'] = res[1]
+    values['effect'] = res[2]
+    array.append(Entry(date, values, True))
+    print(values)
+
+print(array[len(array) - 1].values)
 
 save_dump(array, 'data/' + str(machineID))
 
