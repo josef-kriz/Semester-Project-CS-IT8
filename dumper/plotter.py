@@ -20,7 +20,7 @@ for key in data[0].values:
     valuelist = []
     for entry in data:
         if entry.is_error:
-            if entry.values['error_code'] == 102:
+            if entry.values['error_code'] == 112:
                 plt.axvline(x=entry.date)
             continue
         if isinstance(entry.values[key], list):
