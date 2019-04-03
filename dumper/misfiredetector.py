@@ -29,7 +29,8 @@ for machineIDresult in machineIDresults:
         else:
             misfireClusters.append(MisfireCluster(machineID =machineID, date = lastMisfire, duration = date - lastMisfire, count = 2))
         currentlyCluster = True
-    
+    if len(misfireClusters) == 0:
+        continue
     f = open('misfireClusters/' + str(machineID) + '_clusters.rick', 'wb')
     pickle.dump(misfireClusters, f)
     f.close()
