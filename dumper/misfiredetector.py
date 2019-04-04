@@ -5,12 +5,12 @@ import pickle
 cursor.execute('SELECT id FROM anlaeg')
 machineIDresults = cursor.fetchall()
 count = 0
+counts = [0, 0, 0, 0, 0]
 for machineIDresult in machineIDresults:
     count+=1
     print(str(count) + ' of ' + str(len(machineIDresults)))
     machineID = machineIDresult[0]
     cursor.execute('SELECT dato FROM anlaegshaendelser WHERE haendelse=112 AND anlaeg_id='+str(machineID) + ' ORDER BY dato')
-    print(cursor.statement)
     results = cursor.fetchall()
     if len(results) < 2:
         continue
@@ -31,9 +31,12 @@ for machineIDresult in machineIDresults:
         currentlyCluster = True
     if len(misfireClusters) == 0:
         continue
+    for cluster in misfireClusters:
+        counts[int(cluster.duration / datetime.timedelta(hours = 1))] += 1
+    print(counts)
     f = open('misfireClusters/' + str(machineID) + '_clusters.rick', 'wb')
     pickle.dump(misfireClusters, f)
     f.close()
- 
+print(counts)
 
 
