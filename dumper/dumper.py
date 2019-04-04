@@ -74,5 +74,3 @@ save_dump(array, 'data/' + str(machineID))
 
 
 
-
-
