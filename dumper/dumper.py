@@ -1,9 +1,10 @@
-import chpdb
+import mysql.connector
 import json
 import pickle
 from model.entry import Entry
 from src.parser import parse_value
 from datetime import timedelta
+
 
 def save_dump(data, path):
     f = open(path, "wb")
@@ -19,7 +20,15 @@ columns = ['ekstraalarm','driftsminutter','driftsform','aa','ab','ac','ad','ae',
 
 machineID = 1000005063
 
-my_cursor = chpdb.cursor
+mydb = mysql.connector.connect(
+    host="192.38.56.161",
+    user="chp",
+    passwd="ecpower5",
+    database="ecpower"
+)
+
+my_cursor = mydb.cursor()
+
 my_cursor.execute('SELECT opkdato, ' + ','.join(columns) + ' FROM opkald2 '
                   'WHERE anlaegId = ' + str(machineID) + ' AND '
                   'opkdato > "2015-08-07 10:33:29" '
@@ -61,9 +70,9 @@ for res in result:
     array.append(Entry(date, values, True))
     # print(values)
 
-save_dump(array, 'data/' + str(machineID) +'.rick')
+save_dump(array, 'data/' + str(machineID))
 
-
+#test
 
 
 
