@@ -8,7 +8,7 @@ from pandas.plotting import register_matplotlib_converters
 # machine_id = 2100102907
 machine_id = 2000410280
 db_row_limit = 1000  # limit for the number of rows being queried from the database
-interval = 'W'  # resampling time interval
+interval = 'W'  # resampling time interval (handbook: http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects)
 cluster_threshold = 2  # number of misfires in the interval for them to be considered as a cluster
 
 # Define the MySQL connection
@@ -40,7 +40,7 @@ dates['size'] = pd.Series(np.full((dates.shape[0],), 50, dtype=int))
 dates['misfires'] = pd.Series(np.ones((dates.shape[0],), dtype=int))
 
 # resample the dates dataframe according to the given interval
-resampled = dates.resample(f'{interval}', on='date').sum()
+resampled = dates.resample(interval, on='date').sum()
 
 # get all rows with misfire count greater than cluster_threshold
 nonzero = resampled[(resampled.T != 0).any()]
