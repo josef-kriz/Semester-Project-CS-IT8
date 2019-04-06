@@ -30,6 +30,5 @@ for machineIDresult in machineIDresults:
 f = open('clusters.rick', 'wb')
 pickle.dump(misfireClusters, f)
 f.close()
-print(counts)
 
 
