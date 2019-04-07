@@ -24,7 +24,7 @@ i = 1
 while i<len(output):
     print(str((i-1)*intervalDuration), 'to', str(i* intervalDuration), ':', len(output[i]))
     i+=1
-f = open('clustersgrouped.rick', 'wb')
+f = open('data/clustersgrouped.rick', 'wb')
 pickle.dump(output, f)
 f.close()
 
