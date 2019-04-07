@@ -27,7 +27,7 @@ for machineIDresult in machineIDresults:
         else:
             misfireClusters[-1].addMisfire(date)    
 
-f = open('clusters.rick', 'wb')
+f = open('data/clusters.rick', 'wb')
 pickle.dump(misfireClusters, f)
 f.close()
 

@@ -18,7 +18,7 @@ for cluster in data:
         output.append([])
     output[interval].append(cluster) 
 print(output)
-f = open('clustersgrouped.rick', 'wb')
+f = open('data/clustersgrouped.rick', 'wb')
 pickle.dump(output, f)
 f.close()
 
