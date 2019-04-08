@@ -14,6 +14,13 @@ db_row_limit = 10000  # limit for the number of rows being queried from the data
 interval = 'H'  # resampling time interval (handbook: http://pandas.pydata.org/pandas-docs/stable/user_guide/timeseries.html#dateoffset-objects)
 cluster_threshold = 2  # number of misfires in the interval for them to be considered as a cluster
 output_path = f'out/{machine_id}_plots'  # the output path for plots
+skip_opkald2_columns = ['id', 'anlaegId', 'dateCreated', 'opkdato']  # do not analyze these columns
+intervals_before = 100  # number of intervals to include in the plot in front of the cluster
+intervals_after = 1  # number of intervals to include in the plot after the cluster
+
+# create the folder if it doesn't exist
+if not os.path.isdir(output_path):
+    os.mkdir(output_path)
 
 # define the MySQL connection
 db = mysql.connector.connect(
@@ -43,7 +50,7 @@ def get_misfires(db_cursor, machine, row_limit=1000):
     result['dato'] = pd.to_datetime(result['dato'])
 
     # set the index to the dato column for easier filtering in future
-    result.set_index('dato')
+    result = result.set_index('dato')
 
     return result
 
@@ -52,12 +59,11 @@ def get_misfires(db_cursor, machine, row_limit=1000):
 def resample_misfires(data, offset):
     # create a new DataFrame using the dato column from result
     # put 1 for misfire count and default dot size of 50
-    dates = data.loc[:, ['dato']]
-    dates['size'] = pd.Series(np.full((dates.shape[0],), 50, dtype=int))
-    dates['misfires'] = pd.Series(np.ones((dates.shape[0],), dtype=int))
-
+    dates = pd.DataFrame(index=data.index)
+    dates['size'] = pd.Series(np.full((dates.shape[0],), 50, dtype=int), index=data.index)
+    dates['misfires'] = pd.Series(np.ones((dates.shape[0],), dtype=int), index=data.index)
     # resample the dates dataframe according to the given interval
-    return dates.resample(offset, on='dato').sum()
+    return dates.resample(offset).sum()
 
 
 # fetches all the calls for the given machine from the opkald2 table
@@ -119,9 +125,6 @@ def get_calls(db_cursor, machine, row_limit=10000):
 
 # draw and save the plots
 def draw_clusters(data, machine, offset, path):
-    if not os.path.isdir(path):
-        os.mkdir(path)
-
     register_matplotlib_converters()
 
     plt.scatter(data.index, data['misfires'], s=data['size'], c='red')
@@ -130,28 +133,35 @@ def draw_clusters(data, machine, offset, path):
     plt.xlabel('Time')
     plt.ylabel(f'# of occurrences in {offset}')
     plt.tight_layout()
-    plt.savefig(f'{output_path}/clusters.png')
+    plt.savefig(f'{path}/clusters.png')
     # plt.show()
     plt.clf()
 
 
 # draw a plot for one sensor
-def draw_sensor(calls_data, clusters_data, sensor, machine, threshold, offset, path):
-    if not os.path.isdir(path):
-        os.mkdir(path)
+def draw_sensor(calls_data, clusters_data, misfire_data, sensor, from_date, to_date, machine, threshold, offset, path):
+    # slice the data for the given period
+    calls_data = calls_data.loc[from_date:to_date]
+    clusters_data = clusters_data.loc[from_date:to_date]
+
+    # skip irrelevant sensors and sensors with no data
+    if sensor in skip_opkald2_columns or calls[sensor].dropna().empty:
+        return
 
     register_matplotlib_converters()
 
     plt.plot(calls_data.index, calls_data[sensor], 'ro', markersize=1, markerfacecolor='C0')
-    plt.suptitle(f'Sensor values for #{machine} ({threshold}/{offset} clusters)')
+    plt.suptitle(f'#{machine} ({threshold}/{offset}) {from_date} - {to_date}')
     # plt.xticks(rotation='vertical')  # TODO
     plt.xlabel('Time')
     plt.ylabel(sensor)
+
+    # add vertical lines
     for date in clusters_data.index:
-        # plt.axvspan(date, to_offset(interval).apply(date))
-        plt.axvline(x=date)
+        plt.axvspan(date, to_offset(interval).apply(date), color='orange', alpha=0.25)
+
     plt.tight_layout()
-    plt.savefig(f'{path}/{sensor}_{threshold}-{offset}.png')
+    plt.savefig(f'{path}/{sensor}_{threshold}-{offset}_{from_date}_{to_date}.png')
     # plt.show()
     plt.clf()
 
@@ -187,11 +197,16 @@ print(f'\t{len(calls)} calls found')
 # parse and draw all sensor values
 for column in calls:
     calls[column] = calls[column].apply(lambda x: parse_cell(column, x))
-    draw_sensor(calls, clusters, column, machine_id, cluster_threshold, interval, output_path)
-    # TODO iterate by clusters
-    # for index, row in clusters.iterrows():
-    #     print(row)
+    # plot all clusters for a sensor
+    draw_sensor(calls, clusters, misfires, column, calls.first_valid_index(), calls.last_valid_index(), machine_id, cluster_threshold, interval, output_path)
+    for index in clusters.index:
+        # compute the interval boundaries
+        start = pd.to_datetime(index) - intervals_before * pd.to_timedelta(to_offset(interval))
+        end = pd.to_datetime(index) + intervals_after * pd.to_timedelta(to_offset(interval))
+        # plot a cluster for a sensor
+        draw_sensor(calls, clusters, misfires, column, start, end, machine_id, cluster_threshold, interval, output_path)
 
+# plot all clusters
 draw_clusters(resampled, machine_id, interval, output_path)
 
 print(f'\tplots saved to {output_path}')

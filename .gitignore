@@ -103,4 +103,9 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-ecpower/out/
+dumper/data/*
+!dumper/data/.gitkeep
+dumper/misfireClusters/*
+!dumper/misfireClusters/.gitkeep
+ecpower/out/*
+!ecpower/out/.gitkeep
