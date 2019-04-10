@@ -41,12 +41,12 @@ def print_stats(groups, stats, data_interval, path):
     f = open(path, 'w')
     f.write('Error code,')
     for group_index in range(0, len(groups)):
-        lower_bound = group_index * data_interval / 60
-        upper_bound = (1 + group_index) * data_interval / 60
+        lower_bound = (group_index - 1) * data_interval / 60
+        upper_bound = group_index * data_interval / 60
         if group_index == 0:
             f.write("Single misfires,")
         else:
-            f.write("Grp #" + str(group_index - 1) + ': ' + str(int(lower_bound)) + '-' + str(int(upper_bound)) + 'min,')
+            f.write("Grp #" + str(group_index) + ': ' + str(int(lower_bound)) + '-' + str(int(upper_bound)) + 'min,')
     f.write('\r\n')
 
     f.write('Number of clusters,')
