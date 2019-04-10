@@ -3,8 +3,9 @@ from model.misfirecluster import MisfireCluster
 import datetime
 import pickle
 
+f = open('data/clusters-5min.rick', 'wb')
 
-cursor.execute('SELECT id FROM anlaeg')
+cursor.execute('SELECT DISTINCT anlaeg_id FROM anlaegshaendelser')
 machineIDresults = cursor.fetchall()
 misfireClusters = []
 count = 0
@@ -20,14 +21,13 @@ for machineIDresult in machineIDresults:
     
     for result in results:
         date = result[0]
-        if (date - lastMisfire) > datetime.timedelta(hours = 5):
+        if (date - lastMisfire) > datetime.timedelta(minutes=5):
             lastMisfire = date
             misfireClusters.append(MisfireCluster(machineID =machineID, date = lastMisfire, duration = datetime.timedelta(seconds = 0), count = 1))
             continue
         else:
             misfireClusters[-1].addMisfire(date)    
 
-f = open('data/clusters.rick', 'wb')
 pickle.dump(misfireClusters, f)
 f.close()
 
