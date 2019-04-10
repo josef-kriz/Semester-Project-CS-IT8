@@ -7,7 +7,8 @@ import datetime
 def get_group_stats(cursor, groupIndex, group, stats):
     group_stats = {}
     for index, cluster in enumerate(group):
-        print("\t" + str(index+1) + " of " + str(len(group)))
+        if (index+1) % 30 == 0:
+            print("\t" + str(index+1) + " of " + str(len(group)))
         group_stats[index] = (get_cluster_stats(cursor, cluster))
     print("Parsing group data...")
     for index, row in group_stats.items():
@@ -42,7 +43,10 @@ def print_stats(groups, stats, data_interval, path):
     for group_index in range(0, len(groups)):
         lower_bound = group_index * data_interval / 60
         upper_bound = (1 + group_index) * data_interval / 60
-        f.write("Grp #" + str(group_index) + ': ' + str(int(lower_bound)) + '-' + str(int(upper_bound)) + 'min,')
+        if group_index == 0:
+            f.write("Single misfires,")
+        else:
+            f.write("Grp #" + str(group_index - 1) + ': ' + str(int(lower_bound)) + '-' + str(int(upper_bound)) + 'min,')
     f.write('\r\n')
 
     f.write('Number of clusters,')
