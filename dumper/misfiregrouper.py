@@ -16,6 +16,8 @@ except:
           "group clusters into groups according the number of misfires in cluster.")
 
 output = {}
+# go through clusters and group them according to time or count interval
+# single misfire events are excluded from grouping and inserted under the key 0
 for cluster in data:
     if len(sys.argv) >= 5 and sys.argv[4] == 'count':
         if cluster.count == 1:
@@ -33,6 +35,7 @@ for cluster in data:
     else:
         output[index].append(cluster)
 
+# print statistics about the groups
 if 0 in output and len(sys.argv) < 5:
     print('Singles:', len(output[0]))
 
@@ -45,6 +48,7 @@ for index, group in groups:
     else:
         print(str((index-1)*intervalDuration), 'to', str(index * intervalDuration), ':', len(group))
 
+# store groups in a pickle format file
 f = open(sys.argv[3], 'wb')
 pickle.dump(output, f)
 f.close()
