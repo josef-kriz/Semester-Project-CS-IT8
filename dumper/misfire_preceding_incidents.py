@@ -3,6 +3,7 @@ import pickle
 import sys
 import datetime
 
+
 # iterates over all clusters of a group, queries the database and accumulates the statistics
 def get_group_stats(cursor, groupIndex, group, stats, interval):
     group_stats = {}
@@ -55,9 +56,17 @@ def parse_group_stats(stats, group, res):
             }
     return stats
 
+
 # goes through the dictionary of statistics and prints the relative counts of clusters that experienced certain
 # incident in the interval prior to the cluster
 def print_stats(groups, stats, data_interval, output):
+    # write number of clusters in each group
+    output.write('Number of clusters,')
+    for index, group in groups.items():
+        no = len(group)
+        output.write(str(no) + ',')
+    output.write('\r\n')
+
     # write a header with group labels
     output.write('Error code,')
     for group_index, group in groups.items():
@@ -67,13 +76,6 @@ def print_stats(groups, stats, data_interval, output):
             output.write("Single misfires,")
         else:
             output.write("Grp #" + str(group_index) + ': ' + str(int(lower_bound)) + '-' + str(int(upper_bound)) + 's,')
-    output.write('\r\n')
-
-    # write number of clusters in each group
-    output.write('Number of clusters,')
-    for index, group in groups.items():
-        no = len(group)
-        output.write(str(no) + ',')
     output.write('\r\n')
 
     # write statistics for each preceding error code in a line
