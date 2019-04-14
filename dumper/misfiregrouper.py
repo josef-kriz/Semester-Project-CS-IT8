@@ -5,27 +5,44 @@ import sys
 
 data =[]
 intervalDuration = timedelta()
+
 try:
     intervalDuration = timedelta(seconds = int(sys.argv[2]))
     data = pickle.load(open(sys.argv[1], "rb"))
-except: print("First argument must be path to the file with misfire cluster data, second argument must be grouping time interval in seconds")
+except:
+    print("First argument must be path to the file with misfire cluster data, "
+          "second argument must be grouping time interval in seconds.")
 
-output = [[]]
+output = {}
 for cluster in data:
-    if cluster.count == 1:
-        output[0].append(cluster)
+    if len(sys.argv) >= 5 and sys.argv[4] == 'count':
+        if cluster.count == 1:
+            index = 0
+        else:
+            index = int(cluster.count / int(sys.argv[2])) + 1
+    else:
+        if cluster.count == 1:
+            index = 0
+        else:
+            index = int(cluster.duration / intervalDuration) + 1
+
+    if index not in output:
+        output[index] = [cluster]
+    else:
+        output[index].append(cluster)
+
+if 0 in output and len(sys.argv) < 5:
+    print('Singles:', len(output[0]))
+
+groups = sorted(output.items(), key=(lambda x: x[0]))
+for index, group in groups:
+    if index == 0 and len(sys.argv) < 5:
         continue
-    interval = int(cluster.duration / intervalDuration) + 1
-    while interval >= len(output):
-        output.append([])
-    output[interval].append(cluster) 
-print('Singles:', len(output[0]) )
-i = 1
-while i<len(output):
-    print(str((i-1)*intervalDuration), 'to', str(i* intervalDuration), ':', len(output[i]))
-    i+=1
-f = open('data/clustersgrouped.rick', 'wb')
+    if len(sys.argv) >= 5 and sys.argv[4] == 'count':
+        print("Clusters of length", index * int(sys.argv[2]), "to", (index + 1) * int(sys.argv[2]), ":", len(group))
+    else:
+        print(str((index-1)*intervalDuration), 'to', str(index * intervalDuration), ':', len(group))
+
+f = open(sys.argv[3], 'wb')
 pickle.dump(output, f)
 f.close()
-
-
