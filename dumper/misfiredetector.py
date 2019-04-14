@@ -5,7 +5,7 @@ import pickle
 
 f = open('data/clusters-5min.rick', 'wb')
 
-cursor.execute('SELECT DISTINCT anlaeg_id FROM anlaegshaendelser')
+cursor.execute('SELECT DISTINCT anlaeg_id FROM anlaegshaendelser;')
 machineIDresults = cursor.fetchall()
 misfireClusters = []
 count = 0
@@ -26,7 +26,8 @@ for machineIDresult in machineIDresults:
             misfireClusters.append(MisfireCluster(machineID =machineID, date = lastMisfire, duration = datetime.timedelta(seconds = 0), count = 1))
             continue
         else:
-            misfireClusters[-1].addMisfire(date)    
+            lastMisfire = date
+            misfireClusters[-1].addMisfire(date)
 
 pickle.dump(misfireClusters, f)
 f.close()
