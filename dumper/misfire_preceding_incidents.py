@@ -60,16 +60,17 @@ def parse_group_stats(stats, group, res):
 # goes through the dictionary of statistics and prints the relative counts of clusters that experienced certain
 # incident in the interval prior to the cluster
 def print_stats(groups, stats, data_interval, output):
+    groups = sorted(groups.items(), key=lambda x:x[0])
     # write number of clusters in each group
     output.write('Number of clusters,')
-    for index, group in groups.items():
+    for index, group in groups:
         no = len(group)
         output.write(str(no) + ',')
     output.write('\r\n')
 
     # write a header with group labels
     output.write('Error code,')
-    for group_index, group in groups.items():
+    for group_index, group in groups:
         lower_bound = (group_index - 1) * data_interval
         upper_bound = group_index * data_interval
         if group_index == 0:
@@ -82,12 +83,12 @@ def print_stats(groups, stats, data_interval, output):
     sorted_codes = sorted(stats.keys())
     for error_code in sorted_codes:
         output.write(str(error_code))
-        for group_index in groups.keys():
+        for group_index, group in groups:
             try:
                 value = stats[error_code][group_index]['clusters']
             except KeyError:
                 value = 0
-            output.write("," + str((value / len(groups[group_index]))))
+            output.write("," + str((value / len(group))))
         output.write('\r\n')
 
     output.close()
