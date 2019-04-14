@@ -30,43 +30,49 @@ def parse_group_stats(stats, group, res):
         code = row[0]
         count = row[1]
         try:
-            stats[code][group] = count
+            boo = stats[code]
         except KeyError:
             stats[code] = {}
-            stats[code][group] = count
+        try:
+            stats[code][group]['clusters'] += 1
+            stats[code][group]['total_count'] += count
+        except KeyError:
+            stats[code][group] = {
+                'clusters': 1,
+                'total_count': count
+            }
     return stats
 
 
-def print_stats(groups, stats, data_interval, path):
-    f = open(path, 'w')
-    f.write('Error code,')
-    for group_index in range(0, len(groups)):
-        lower_bound = (group_index - 1) * data_interval / 60
-        upper_bound = group_index * data_interval / 60
+def print_stats(groups, stats, data_interval, output):
+    output.write('Error code,')
+    for group_index, group in groups.items():
+        lower_bound = (group_index - 1) * data_interval
+        upper_bound = group_index * data_interval
         if group_index == 0:
-            f.write("Single misfires,")
+            output.write("Single misfires,")
         else:
-            f.write("Grp #" + str(group_index) + ': ' + str(int(lower_bound)) + '-' + str(int(upper_bound)) + 'min,')
-    f.write('\r\n')
+            output.write("Grp #" + str(group_index) + ': ' + str(int(lower_bound)) + '-' + str(int(upper_bound)) + 's,')
+    output.write('\r\n')
 
-    f.write('Number of clusters,')
-    for group_index in range(0, len(groups)):
-        no = len(groups[group_index])
-        f.write(str(no) + ',')
-    f.write('\r\n')
+    output.write('Number of clusters,')
+    for index, group in groups.items():
+        no = len(group)
+        output.write(str(no) + ',')
+    output.write('\r\n')
 
     sorted_codes = sorted(stats.keys())
     for error_code in sorted_codes:
-        f.write(str(error_code))
-        for group_index in range(0, len(groups)):
+        output.write(str(error_code))
+        for group_index in groups.keys():
             try:
-                value = stats[error_code][group_index]
+                value = stats[error_code][group_index]['clusters']
             except KeyError:
                 value = 0
-            f.write("," + str(value))
-        f.write('\r\n')
+            output.write("," + str((value / len(groups[group_index]))))
+        output.write('\r\n')
 
-    f.close()
+    output.close()
 
 
 path = sys.argv[1]
@@ -80,10 +86,13 @@ output = sys.argv[4]
 
 source_file = open(path, 'rb')
 grouped_clusters = pickle.load(source_file)
+dest_file = open(output, 'w')
 
 stats = {}
-for index, group_index in enumerate(grouped_clusters):
+for index, group_index in grouped_clusters.items():
+    # if index < 5:
+    #     continue
     print(str(index+1) + " of " + str(len(grouped_clusters)) + " - # of clusters: " + str(len(group_index)))
     stats = get_group_stats(cursor, index, group_index, stats)
 
-print_stats(grouped_clusters, stats, data_interval, output)
+print_stats(grouped_clusters, stats, data_interval, dest_file)
