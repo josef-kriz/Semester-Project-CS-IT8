@@ -11,7 +11,9 @@ try:
     data = pickle.load(open(sys.argv[1], "rb"))
 except:
     print("First argument must be path to the file with misfire cluster data, "
-          "second argument must be grouping time interval in seconds.")
+          "second argument must be grouping interval in seconds (or divider for modulo of count)."
+          "Third argument is part to output file. Fourth argument is 'count' in case you want to"
+          "group clusters into groups according the number of misfires in cluster.")
 
 output = {}
 for cluster in data:
