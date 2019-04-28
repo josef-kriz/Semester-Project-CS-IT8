@@ -71,6 +71,3 @@ for res in result:
     # print(values)
 
 save_dump(array, 'data/' + str(machineID))
-
-#kasper hello?
-
