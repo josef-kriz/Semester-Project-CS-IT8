@@ -93,7 +93,7 @@ parsers = [
     [signed_parser, 6, 0, ['ai', 'aj', 'ak', 'am']],
     [unsigned_parser, 5, 0, ['aim_power', 'av', 'misfire_1', 'lgvgp', 'requested_power']],
     [unsigned_parser, 4, 0,
-     ['actual_map_pressure', 'start_map_pressure', 'map_offset', 'lambda_setpoint', 'lambda_voltage']],
+     ['actual_map_pressure', 'start_map_pressure', 'map_offset', 'lambda_setpoint', 'lambda_voltage', 'actual_rpm']],
     [unsigned_parser, 3, 0, ['bx_nspfase1', 'by_nspfase2', 'bz_nspfase3']],
     [datetime_parser, 0, 0, ['dateCreated', 'opkdato', 'datasampling']],
     [keep_as_is, 0, 0, ['reginaInstance', 'misfire_log', 'cr']]  # what TODO with these columns?
