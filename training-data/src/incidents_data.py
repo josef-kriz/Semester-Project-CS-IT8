@@ -26,9 +26,11 @@ def get_incidents_counts(machine_id, interval_start, interval_end, incident_ids)
                 interval_start,
                 interval_end
             )
-    print(query)
+    # print(query)
     cursor.execute(query)
-    return cursor.fetchall()
+    result = cursor.fetchall()
+    # print(len(result))
+    return result
 
 
 def fetch_incidents(datetime, machine_id, interval, incident_ids):
@@ -38,11 +40,10 @@ def fetch_incidents(datetime, machine_id, interval, incident_ids):
     return fill_in_empty_values(incident_counts, incident_ids)
 
 
-res = fetch_incidents(
-    datetime.datetime(year=2017, month=12, day=1),
-    1000711803,
-    datetime.timedelta(days=120),
-    [78, 4, 112]
-)
-
-print(res)
+# res = fetch_incidents(
+#     datetime.datetime(year=2017, month=12, day=1),
+#     1000711803,
+#     datetime.timedelta(days=120),
+#     [78, 4, 112]
+# )
+# print(res)
