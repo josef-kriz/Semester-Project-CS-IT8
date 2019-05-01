@@ -1,4 +1,4 @@
-from src.chpdb import cursor
+from .chpdb import cursor
 
 
 # Returns the median of all software versions of the given machine for the last x messages from the given date

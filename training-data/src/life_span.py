@@ -1,4 +1,4 @@
-from src.chpdb import cursor
+from .chpdb import cursor
 
 
 # Find the oldest message for a given machine and return the time delta in seconds
