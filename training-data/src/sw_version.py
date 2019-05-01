@@ -22,5 +22,18 @@ def get_sw_version(ref_datetime, machine_id, x):
                         LIMIT {x};\
     ')
     versions = [x[0] for x in cursor.fetchall()]
+    if len(versions) == 0:
+        cursor.execute(f'SELECT opkdato\
+                        FROM opkald2\
+                        WHERE anlaegId = {machine_id}\
+                        ORDER BY opkdato DESC\
+                        LIMIT 1;\
+        ')
+        date = cursor.fetchone()[0]
+
+        if date is None:
+            raise Exception(f'No config found for machine #{machine_id} in the anlaeg_config table!')
+
+        return [date]
 
     return [max(set(versions), key=versions.count)]
