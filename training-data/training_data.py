@@ -2,6 +2,8 @@ import datetime
 from src.chpdb import cursor
 from src.incidents_data import fetch_incidents
 from src.sensor_data import fetch_sensors
+from src.life_span import get_life_span
+from src.sw_version import get_sw_version
 
 settings = {
     'incidents': [78, 4, 112],
@@ -53,6 +55,8 @@ def sampling_step(machine_id, datetime, settings):
             settings['sensors_samples']
         )
     )
+    data.extend(get_life_span(datetime, machine_id))
+    # data.extend(get_sw_version(datetime, machine_id, settings['sensors_samples']))
     print(data)
     return data
 
@@ -100,6 +104,8 @@ for machine_id in machines:
     data.append(sample_machine(machine_id, settings))
 
 print(len(data))
+
+cursor.close()
 
 
 
