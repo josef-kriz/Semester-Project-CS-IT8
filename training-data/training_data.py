@@ -37,30 +37,6 @@ def sample_machine(machine_id, settings):
     return samples
 
 
-def sampling_step(machine_id, datetime, settings):
-    data = []
-    data.extend(
-        fetch_incidents(
-            datetime,
-            machine_id,
-            settings['incidents_past_interval'],
-            settings['incidents']
-        )
-    )
-    data.extend(
-        fetch_sensors(
-            datetime,
-            machine_id,
-            settings['sensors'],
-            settings['sensors_samples']
-        )
-    )
-    data.extend(get_life_span(datetime, machine_id))
-    # data.extend(get_sw_version(datetime, machine_id, settings['sensors_samples']))
-    print(data)
-    return data
-
-
 def get_machine_start_date(machine_id, settings):
     first_sensors_moment = get_start_sensors(machine_id, settings['sensors_samples'])
     first_incidents_moment = get_start_incidents(machine_id, settings['incidents_past_interval'])
@@ -98,10 +74,35 @@ def get_start_incidents(machine_id, time_interval):
     cursor.execute(query)
     return cursor.fetchone()[0] + time_interval
 
+
+def sampling_step(machine_id, datetime, settings):
+    data = []
+    data.extend(
+        fetch_incidents(
+            datetime,
+            machine_id,
+            settings['incidents_past_interval'],
+            settings['incidents']
+        )
+    )
+    data.extend(
+        fetch_sensors(
+            datetime,
+            machine_id,
+            settings['sensors'],
+            settings['sensors_samples']
+        )
+    )
+    data.extend(get_life_span(datetime, machine_id))
+    data.extend(get_sw_version(datetime, machine_id, settings['sensors_samples']))
+    print(data)
+    return data
+
+
 machines = get_machines(1)
 data = []
 for machine_id in machines:
-    data.append(sample_machine(machine_id, settings))
+    data.extend(sample_machine(machine_id, settings))
 
 print(len(data))
 
