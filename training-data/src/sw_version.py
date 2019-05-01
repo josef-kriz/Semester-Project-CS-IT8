@@ -23,12 +23,12 @@ def get_sw_version(ref_datetime, machine_id, x):
     ')
     versions = [x[0] for x in cursor.fetchall()]
     if len(versions) == 0:
-        cursor.execute(f'SELECT opkdato\
-                        FROM opkald2\
-                        WHERE anlaegId = {machine_id}\
+        cursor.execute(f'SELECT softwareversion\
+                        FROM anlaeg_config\
+                        WHERE anlaeg_id = {machine_id}\
                         ORDER BY opkdato DESC\
                         LIMIT 1;\
-        ')
+    ')
         date = cursor.fetchone()[0]
 
         if date is None:
