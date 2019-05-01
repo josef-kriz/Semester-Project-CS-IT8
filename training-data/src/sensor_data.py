@@ -16,8 +16,10 @@ def get_sensor_data(date, machineID, sensors, count):
                 date,
                 count
             )
+    # print(query)
     cursor.execute(query)
     result = cursor.fetchall()
+    # print(len(result))
     # first returned values are dates of messages
     dates = [val[0] for val in result]
     # rest of returned values are sensor readings
@@ -46,7 +48,6 @@ def parse_sensors(sensor_rows, sensor_names):
 def parse_dates(dates, reference):
     intervals = []
     for i in range(0, len(dates)):
-        print(dates[i])
         delta = reference - dates[i]
         intervals.append(delta.total_seconds())
     return intervals
@@ -58,8 +59,9 @@ def fetch_sensors(datetime, machine_id, sensor_names, sensor_readings_count):
     dates, sensor_readings = get_sensor_data(datetime, machine_id, sensor_names, sensor_readings_count)
     res.extend(parse_sensors(sensor_readings, sensor_names))
     res.extend(parse_dates(dates, datetime))
+    # print(res)
     return res
 
 
 # test
-fetch_sensors(datetime.datetime(2019, 12, 5), 1000711803, ['actual_rpm', 'storage_fill'], 5)
+# fetch_sensors(datetime.datetime(2019, 12, 5), 1000711803, ['actual_rpm', 'storage_fill'], 5)
