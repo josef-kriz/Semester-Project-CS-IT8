@@ -22,6 +22,5 @@ def get_sw_version(ref_datetime, machine_id, x):
                         LIMIT {x};\
     ')
     versions = [x[0] for x in cursor.fetchall()]
-    cursor.close()
 
-    return max(set(versions), key=versions.count)
+    return [max(set(versions), key=versions.count)]
