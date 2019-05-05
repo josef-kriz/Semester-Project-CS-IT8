@@ -29,6 +29,6 @@ def get_machine_type(machine_id):
     elif effekt == 'XRGI® 17BIO':
         type_list[7] = 1
 
-    print(type_list)
+    # print(type_list)
 
     return type_list

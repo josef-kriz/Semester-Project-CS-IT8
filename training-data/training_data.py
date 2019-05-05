@@ -7,6 +7,8 @@ from src.sw_version import get_sw_version
 from src.past_misfires import get_past_misfires
 from src.machine_type import get_machine_type
 from src.target import get_target
+from sklearn import tree
+import graphviz
 
 settings = {
     'incidents': [78, 4, 112],
@@ -122,5 +124,24 @@ for machine in machines:
     targets.extend(machine_targets)
 
 print(len(data), len(targets))
+
+clf = tree.DecisionTreeClassifier()
+clf = clf.fit(data, targets)
+
+test_sample1 = [0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 23102330.0, 22552315.0, 22552315.0, 21552215.0, 21552215.0, 4003.0, 47290.0, 90567.0, 133847.0, 177125.0, 56684, '0010140002', 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+test_sample2 = [7, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 22252245.0, 22102230.0, 22102230.0, 22252245.0, 22252245.0, 24880.0, 72306.0, 101180.0, 135341.0, 165746.0, 56684, '0010120003', 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+test_sample3 = [0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 23102330.0, 23102330.0, 21252145.0, 21252145.0, 21252145.0, 34777.0, 63659.0, 117798.0, 148916.0, 180110.0, 56684, '0010120003', 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+
+print(clf.predict_proba([test_sample1]))
+print(clf.predict_proba([test_sample2]))
+print(clf.predict_proba([test_sample3]))
+
+dot_data = tree.export_graphviz(clf, out_file=None,
+                     # feature_names=iris.feature_names,
+                     # class_names=iris.target_names,
+                     filled=True, rounded=True,
+                     special_characters=True)
+graph = graphviz.Source(dot_data)
+graph.render("iris")
 
 cursor.close()
