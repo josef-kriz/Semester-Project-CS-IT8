@@ -1,7 +1,7 @@
 from .chpdb import cursor
 
 
-# Returns list [misfires in the past, misfire kills int he past]
+# Returns list [misfires in the past, misfire kills in the past]
 def get_past_misfires(ref_datetime, machine_id):
     cursor.execute(f'SELECT MIN(opkdato) FROM opkald2 WHERE anlaegId = {machine_id};')
     date = cursor.fetchone()[0]
