@@ -8,7 +8,7 @@ from src.past_misfires import get_past_misfires
 from src.machine_type import get_machine_type
 from src.target import get_target
 from sklearn import tree
-import graphviz
+# import graphviz
 
 settings = {
     'incidents': [78, 4, 112],
@@ -19,17 +19,19 @@ settings = {
     'sampling_interval': datetime.timedelta(days=1)
 }
 
-
 def get_machines(count):
     cursor.execute("SELECT id "
                    "FROM anlaeg "
-                   "ORDER BY RAND() "
-                   "LIMIT {};".format(count))
+                   "ORDER BY RAND();")
     return [x[0] for x in cursor.fetchall()]
 
 
 def sample_machine(machine_id, ref_settings):
     start_date = get_machine_start_date(machine_id, ref_settings)
+
+    if start_date == False:
+        return False, False
+
     end_date = get_machine_end_date(machine_id)
     current_date = start_date
     # print(start_date)
@@ -42,13 +44,18 @@ def sample_machine(machine_id, ref_settings):
         samples_data.append(step_data)
         samples_targets.append(step_target)
         current_date += ref_settings['sampling_interval']
+        if len(samples_data) > 20:
+            break
     return samples_data, samples_targets
 
 
 def get_machine_start_date(machine_id, settings):
     first_sensors_moment = get_start_sensors(machine_id, settings['sensors_samples'])
     first_incidents_moment = get_start_incidents(machine_id, settings['incidents_past_interval'])
-    return max(first_incidents_moment, first_sensors_moment)
+    if first_sensors_moment is None or first_incidents_moment is None:
+        return False
+    else:
+        return max(first_incidents_moment, first_sensors_moment)
 
 
 def get_machine_end_date(machine_id):
@@ -70,8 +77,13 @@ def get_start_sensors(machine_id, sensor_samples_count):
         machine_id,
         sensor_samples_count - 1
     )
+
     cursor.execute(query)
-    return cursor.fetchone()[0]
+    result = cursor.fetchone()
+    if result is None:
+        return None
+    else:
+        return result[0]
 
 
 def get_start_incidents(machine_id, time_interval):
@@ -81,7 +93,10 @@ def get_start_incidents(machine_id, time_interval):
             "ORDER BY dato ASC " \
             "LIMIT 1;".format(machine_id)
     cursor.execute(query)
-    return cursor.fetchone()[0] + time_interval
+    result = cursor.fetchone()
+    if result is None:
+        return None
+    return result[0] + time_interval
 
 
 def sampling_step(machine_id, ref_datetime, ref_settings):
@@ -115,13 +130,31 @@ def sampling_step(machine_id, ref_datetime, ref_settings):
     return step_data, step_target
 
 
-machines = get_machines(1)
+fetch_machines = get_machines(3)
+machines = fetch_machines[:2]
+test_machines = fetch_machines[2:4]
+
+# machines = [2100780010]
+# test_machines = [2100780010]
+
 data = []
 targets = []
+test_data = []
+test_targets = []
+
 for machine in machines:
     machine_samples, machine_targets = sample_machine(machine, settings)
-    data.extend(machine_samples)
-    targets.extend(machine_targets)
+
+    if machine_samples and machine_targets:
+        data.extend(machine_samples)
+        targets.extend(machine_targets)
+
+for machine in test_machines:
+    test_samples, test_targets = sample_machine(machine, settings)
+
+    if test_samples and test_targets:
+        test_data.extend(test_samples)
+        test_targets.extend(test_targets)
 
 print(len(data), len(targets))
 
@@ -132,16 +165,22 @@ test_sample1 = [0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 23102330.0, 22552315.0, 225523
 test_sample2 = [7, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 22252245.0, 22102230.0, 22102230.0, 22252245.0, 22252245.0, 24880.0, 72306.0, 101180.0, 135341.0, 165746.0, 56684, '0010120003', 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
 test_sample3 = [0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 23102330.0, 23102330.0, 21252145.0, 21252145.0, 21252145.0, 34777.0, 63659.0, 117798.0, 148916.0, 180110.0, 56684, '0010120003', 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
 
-print(clf.predict_proba([test_sample1]))
-print(clf.predict_proba([test_sample2]))
-print(clf.predict_proba([test_sample3]))
+predictions = clf.predict(test_data)
 
-dot_data = tree.export_graphviz(clf, out_file=None,
-                     # feature_names=iris.feature_names,
-                     # class_names=iris.target_names,
-                     filled=True, rounded=True,
-                     special_characters=True)
-graph = graphviz.Source(dot_data)
-graph.render("iris")
+correct_predictions = 0
+
+for i in range(0, len(predictions)):
+    if predictions[i] == test_targets[i]:
+        correct_predictions += 1
+
+print((correct_predictions / len(predictions)) * 100 + "%")
+
+# dot_data = tree.export_graphviz(clf, out_file=None,
+#                      # feature_names=iris.feature_names,
+#                      # class_names=iris.target_names,
+#                      filled=True, rounded=True,
+#                      special_characters=True)
+# graph = graphviz.Source(dot_data)
+# graph.render("iris")
 
 cursor.close()
