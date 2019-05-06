@@ -10,7 +10,7 @@ def get_target(ref_datetime, machine_id):
     if date is None:
         raise Exception(f'No message found for machine #{machine_id} in the opkald2 table!')
 
-    end_date = date + datetime.timedelta(days=1)
+    end_date = ref_datetime + datetime.timedelta(days=1)
 
     cursor.execute(f'SELECT COUNT(*) FROM anlaegshaendelser WHERE anlaeg_id = {machine_id} AND dato > "{ref_datetime}" AND dato < "{end_date}" AND misfire_shutdown = 1;')
     shutdown_count = cursor.fetchone()[0]
