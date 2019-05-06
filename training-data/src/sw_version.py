@@ -34,6 +34,6 @@ def get_sw_version(ref_datetime, machine_id, x):
         if date is None:
             raise Exception(f'No config found for machine #{machine_id} in the anlaeg_config table!')
 
-        return [date]
+        return [int(date)]
 
-    return [max(set(versions), key=versions.count)]
+    return [int(max(set(versions), key=versions.count))]
