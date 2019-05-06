@@ -16,10 +16,13 @@ def get_sensor_data(date, machineID, sensors, count):
                 date,
                 count
             )
-    # print(query)
+
     cursor.execute(query)
     result = cursor.fetchall()
-    # print(len(result))
+
+    if len(result) < count:
+        return False, False
+
     # first returned values are dates of messages
     dates = [val[0] for val in result]
     # rest of returned values are sensor readings
@@ -37,6 +40,10 @@ def parse_sensors(sensor_rows, sensor_names):
         for row in sensor_rows:
             # parse the value according to the sensor name
             value = parse_value(sensor_name, row[i])
+
+            if (None in value) or (value is None):
+                raise Exception("Invalid value found in this sample. Column name {}!".format(sensor_name))
+
             # if multiple values are returned, use an average value
             value = sum(value) / len(value)
             values.append(value)
@@ -57,9 +64,13 @@ def parse_dates(dates, reference):
 def fetch_sensors(datetime, machine_id, sensor_names, sensor_readings_count):
     res = []
     dates, sensor_readings = get_sensor_data(datetime, machine_id, sensor_names, sensor_readings_count)
+
+    if not dates and sensor_readings:
+        return []
+
     res.extend(parse_sensors(sensor_readings, sensor_names))
     res.extend(parse_dates(dates, datetime))
-    # print(res)
+
     return res
 
 
