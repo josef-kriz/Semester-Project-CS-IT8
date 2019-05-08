@@ -9,23 +9,35 @@ from sklearn.metrics import roc_curve, auc
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
-#import graphviz
+import graphviz
 
-#CONFIG
+# CONFIG
 training_test_split = 0.7
 shuffle_data = True
 print_graph = False
 draw_roc_curve = True
+feature_names = []
+feature_names.extend([f'Incident #{s}' for s in [1, 5, 6, 7, 10, 19, 20, 21, 49, 61, 62, 63, 64, 65, 66, 68, 76,
+                                                 79, 80, 81, 82, 83, 89, 100, 102, 103, 112, 113, 123, 130, 133]])
+feature_names.extend([f'Reading #{n} for sensor {s}' for s in
+                      ['aktuel_elproduktion', 'ab', 'ac', 'actual_map_pressure', 'actual_powerstep_position',
+                       'actual_rpm',
+                       'ak', 'anlaeggets_elproduktion', 'av', 'cv_psu_voltage', 'ecu_pcb_temp', 'ecu_vandtemp', 'lk', 'lw', 'mk', 'mv', 'stopminutter',
+                       'varmefordeler_printtemparatur'] for n in range(1, 6)])
+feature_names.extend([f'Reading #{n} offset' for n in range(1, 6)])
+feature_names.extend(['Life span', 'SW version', 'Past misfire kills', 'Past misfires'])
+feature_names.extend([f'Machine type #{s}' for s in range(1, 9)])
+target_names = ['Misfire NO', 'Misfire YES'] # TODO this way or vice versa?
 
 clf = tree.DecisionTreeClassifier()
 #clf = ensemble.RandomForestClassifier()
 
 def PrintGraph(clf):
     dot_data = tree.export_graphviz(clf, out_file=None,
-                         # feature_names=iris.feature_names,
-                         # class_names=iris.target_names,
-                         filled=True, rounded=True,
-                         special_characters=True)
+                                    feature_names=feature_names,
+                                    class_names=target_names,
+                                    filled=True, rounded=True,
+                                    special_characters=True)
     graph = graphviz.Source(dot_data)
     graph.render("iris")
 
