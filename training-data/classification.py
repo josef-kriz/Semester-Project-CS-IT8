@@ -4,17 +4,20 @@ from sklearn import ensemble
 from sklearn import naive_bayes
 from sklearn import neighbors
 from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_curve, auc
+import numpy as np
 import pickle
-import graphviz
+import matplotlib.pyplot as plt
+#import graphviz
 
 #CONFIG
 training_test_split = 0.7
 shuffle_data = True
 print_graph = False
+draw_roc_curve = True
 
 clf = tree.DecisionTreeClassifier()
-#clf = naive_bayes.GaussianNB()
-#clf = neighbors.KNeighborsClassifier
 #clf = ensemble.RandomForestClassifier()
 
 def PrintGraph(clf):
@@ -25,6 +28,31 @@ def PrintGraph(clf):
                          special_characters=True)
     graph = graphviz.Source(dot_data)
     graph.render("iris")
+
+def DrawRocCurve(test_targets, predictions):
+    np_test_targets = np.asarray(int_test_targets, dtype=np.int32)
+    np_predictions = np.asarray(int_predictions, dtype=np.int32)
+
+    # Compute micro-average ROC curve and ROC area
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+
+    fpr["micro"], tpr["micro"], _ = roc_curve(np_test_targets.ravel(), np_predictions.ravel())
+    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
+
+    plt.figure()
+    lw = 2
+    plt.plot(fpr['micro'], tpr['micro'], color='darkorange',
+             lw=lw, label='ROC curve (area = %0.2f)' % roc_auc['micro'])
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic example')
+    plt.legend(loc="lower right")
+    plt.show()
 
 with open('training.pickle', 'rb') as f:
     data = pickle.load(f)
@@ -54,6 +82,9 @@ predictions = clf.predict(test_features)
 int_test_targets = [int(i) for i in test_targets]
 int_predictions = [int(i) for i in predictions]
 print(precision_recall_fscore_support(int_test_targets, int_predictions, average='macro'))
+
+if draw_roc_curve:
+    DrawRocCurve(int_test_targets, int_predictions)
 
 if print_graph:
     PrintGraph(clf)
