@@ -4,8 +4,7 @@ from sklearn import ensemble
 from sklearn import naive_bayes
 from sklearn import neighbors
 from sklearn.metrics import precision_recall_fscore_support
-from sklearn.metrics import roc_auc_score
-from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import roc_curve, auc, roc_auc_score
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
@@ -17,7 +16,8 @@ shuffle_data = True
 print_graph = False
 draw_roc_curve = True
 
-clf = tree.DecisionTreeClassifier()
+clf = neighbors.KNeighborsClassifier(n_neighbors=4)
+#clf = tree.DecisionTreeClassifier()
 #clf = ensemble.RandomForestClassifier()
 
 def PrintGraph(clf):
@@ -29,32 +29,21 @@ def PrintGraph(clf):
     graph = graphviz.Source(dot_data)
     graph.render("iris")
 
+
 def DrawRocCurve(test_targets, predictions):
-    np_test_targets = np.asarray(int_test_targets, dtype=np.int32)
-    np_predictions = np.asarray(int_predictions, dtype=np.int32)
+    auc = roc_auc_score(test_targets, predictions)
+    print('AUC: %.3f' % auc)
 
-    # Compute micro-average ROC curve and ROC area
-    fpr = dict()
-    tpr = dict()
-    roc_auc = dict()
-
-    fpr["micro"], tpr["micro"], _ = roc_curve(np_test_targets.ravel(), np_predictions.ravel())
-    roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
-
-    plt.figure()
-    lw = 2
-    plt.plot(fpr['micro'], tpr['micro'], color='darkorange',
-             lw=lw, label='ROC curve (area = %0.2f)' % roc_auc['micro'])
-    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver operating characteristic example')
-    plt.legend(loc="lower right")
+    fpr, tpr, thresholds = roc_curve(test_targets, predictions)
+    # plot no skill
+    plt.plot([0, 1], [0, 1], linestyle='--')
+    # plot the roc curve for the model
+    plt.plot(fpr, tpr, marker='.')
+    # show the plot
     plt.show()
 
-with open('training.pickle', 'rb') as f:
+
+with open('/home/pheaton/Documents/CHP/training.pickle', 'rb') as f:
     data = pickle.load(f)
 
     if shuffle_data:
@@ -84,7 +73,7 @@ int_predictions = [int(i) for i in predictions]
 print(precision_recall_fscore_support(int_test_targets, int_predictions, average='macro'))
 
 if draw_roc_curve:
-    DrawRocCurve(int_test_targets, int_predictions)
+    DrawRocCurve(test_targets, predictions)
 
 if print_graph:
     PrintGraph(clf)
