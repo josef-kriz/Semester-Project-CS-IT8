@@ -1,92 +1,87 @@
+from src.classification_print_tools import print_graph_graphviz, print_data_statistics, \
+    print_prediction_statistics, draw_roc_curve_plotlib
 from sklearn.utils import shuffle
 from sklearn import tree
 from sklearn import ensemble
 from sklearn import naive_bayes
 from sklearn import neighbors
-from sklearn.metrics import precision_recall_fscore_support
-from sklearn.metrics import roc_curve, auc, roc_auc_score
-import numpy as np
-import pickle
+from sklearn import linear_model
 import matplotlib.pyplot as plt
-import graphviz
+import pickle
 
 # CONFIG
-training_test_split = 0.7
+training_test_ratio = 0.7
+negative_samples_ratio = 800
 shuffle_data = True
 print_graph = False
 draw_roc_curve = True
-feature_names = []
-feature_names.extend([f'Incident #{s}' for s in [1, 5, 6, 7, 10, 19, 20, 21, 49, 61, 62, 63, 64, 65, 66, 68, 76,
-                                                 79, 80, 81, 82, 83, 89, 100, 102, 103, 112, 113, 123, 130, 133]])
-feature_names.extend([f'Reading #{n} for sensor {s}' for s in
-                      ['aktuel_elproduktion', 'ab', 'ac', 'actual_map_pressure', 'actual_powerstep_position',
-                       'actual_rpm',
-                       'ak', 'anlaeggets_elproduktion', 'av', 'cv_psu_voltage', 'ecu_pcb_temp', 'ecu_vandtemp', 'lk', 'lw', 'mk', 'mv', 'stopminutter',
-                       'varmefordeler_printtemparatur'] for n in range(1, 6)])
-feature_names.extend([f'Reading #{n} offset' for n in range(1, 6)])
-feature_names.extend(['Life span', 'SW version', 'Past misfire kills', 'Past misfires'])
-feature_names.extend([f'Machine type #{s}' for s in range(1, 9)])
-target_names = ['Misfire NO', 'Misfire YES'] # TODO this way or vice versa?
-
-clf = neighbors.KNeighborsClassifier(n_neighbors=4)
-#clf = tree.DecisionTreeClassifier()
-#clf = ensemble.RandomForestClassifier()
-
-def PrintGraph(clf):
-    dot_data = tree.export_graphviz(clf, out_file=None,
-                                    feature_names=feature_names,
-                                    class_names=target_names,
-                                    filled=True, rounded=True,
-                                    special_characters=True)
-    graph = graphviz.Source(dot_data)
-    graph.render("iris")
+file_name = 'output/training-full.pickle'
 
 
-def DrawRocCurve(test_targets, predictions):
-    auc = roc_auc_score(test_targets, predictions)
-    print('AUC: %.3f' % auc)
+def limit_negative_samples(features, targets, negative_count):
+    limited_features = []
+    limited_targets = []
+    for i in range(0, len(targets)):
+        if targets[i] == 1 or negative_count > 0:
+            limited_features.append(features[i])
+            limited_targets.append(targets[i])
+        if targets[i] == 0:
+            negative_count -= 1
+    return limited_features, limited_targets
 
-    fpr, tpr, thresholds = roc_curve(test_targets, predictions)
-    # plot no skill
-    plt.plot([0, 1], [0, 1], linestyle='--')
-    # plot the roc curve for the model
-    plt.plot(fpr, tpr, marker='.')
-    # show the plot
-    plt.show()
+
+def split_data(features, targets, training_ratio, neg_limit=False, print_stats=True):
+    boundary_index = int(len(features) * training_ratio)
+
+    training_data = [
+        features[:boundary_index],
+        targets[:boundary_index]
+    ]
+
+    if neg_limit != False:
+        training_data[0],  training_data[1] = limit_negative_samples(training_data[0], training_data[1], neg_limit)
+
+    test_data = [
+        features[boundary_index:],
+        targets[boundary_index:]
+    ]
+
+    if print_stats:
+        print_data_statistics(training_data, test_data)
+
+    return training_data, test_data
 
 
-with open('/home/pheaton/Documents/CHP/training.pickle', 'rb') as f:
+with open(file_name, 'rb') as f:
     data = pickle.load(f)
 
-    if shuffle_data:
-        features, targets = shuffle(data[0], data[1])
+features = data[0]
+targets = data[1]
 
-    training_features = features[:int(len(data[0])*training_test_split)-1]
-    training_targets = targets[:int(len(data[1])*training_test_split)-1]
-    test_features = features[int(len(data[0])*training_test_split):]
-    test_targets = targets[int(len(data[1])*training_test_split):]
+if shuffle_data:
+    features, targets = shuffle(features, targets)
 
-    #counts the amount of samples with misfire kills in data
-    counter = 0
+for [limit, color] in [[600, 'blue'], [700, 'darkorange'], [2000, 'red'], [10000, 'brown'], [90000, 'green']]:
+    train_data, test_data = split_data(features, targets, training_test_ratio, limit)
+    clf = ensemble.RandomForestClassifier()
+    # clf = neighbors.KNeighborsClassifier(n_neighbors=4)
+    # clf = tree.DecisionTreeClassifier()
+    # clf = linear_model.LogisticRegression()
+    clf = clf.fit(train_data[0], train_data[1])
 
-    for i in range(len(data[1])):
-        if data[1][i] == 1:
-            counter += 1
+    predictions = clf.predict(test_data[0])
 
-    print(counter)
-    print(len(data[1]))
-    print('{0:.{1}f}'.format((counter / len(data[1]) * 100), 2) + '%')
+    print_prediction_statistics(predictions, test_data, limit)
 
-clf = clf.fit(training_features, training_targets)
+    if draw_roc_curve:
+        draw_roc_curve_plotlib(test_data[1], predictions, limit, color)
 
-predictions = clf.predict(test_features)
-int_test_targets = [int(i) for i in test_targets]
-int_predictions = [int(i) for i in predictions]
-print(precision_recall_fscore_support(int_test_targets, int_predictions, average='macro'))
+    if print_graph:
+        print_graph_graphviz(clf)
 
-if draw_roc_curve:
-    DrawRocCurve(test_targets, predictions)
+plt.show()
 
-if print_graph:
-    PrintGraph(clf)
+
+
+
 
