@@ -41,16 +41,20 @@ def draw_roc_curve_plotlib(test_targets, predictions, limit, color):
     auc = roc_auc_score(test_targets, predictions)
     fpr, tpr, thresholds = roc_curve(test_targets, predictions)
 
+    print("Prediction statistics with limit of", limit)
+    (precision, recall, _, _) = precision_recall_fscore_support(test_targets, predictions, average='macro')
+    print("\tPrecision:", precision)
+    print("\tRecall:", recall)
+
     # plot no skill line
     plt.plot([0, 1], [0, 1], color='black', lw=2, linestyle='--')
     # plot the roc curve for the model
     plt.plot(fpr, tpr, color=color, lw=2, marker='.',
-             label='limit {} - roc area = {}'.format(limit, auc))
+             label='limit {} - precision {:.3f}, recall {:.3f}'.format(limit, precision, recall))
     # add markers
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('Receiver operating characteristic')
-    plt.legend()
+    plt.legend(loc='lower right')
 
 
 # print statistics about training and test data set
@@ -67,12 +71,3 @@ def print_data_split_statistics(targets):
     print("\tSamples:", len(targets))
     print("\tSamples w shutdown:", misfire_count)
     print("\tSamples w\\ shutdown:", len(targets) - misfire_count)
-
-
-# print statistics about the computed prediction
-def print_prediction_statistics(predictions, test_data, limit):
-    print("Prediction statistics with limit of", limit)
-    (precision, recall, fscore, _) = precision_recall_fscore_support(test_data[1], predictions, average='macro')
-    print("\tPrecision:", precision)
-    print("\tRecall:", recall)
-    print("\tF-beta score:", fscore)

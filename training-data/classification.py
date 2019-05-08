@@ -1,5 +1,4 @@
-from src.classification_print_tools import print_graph_graphviz, print_data_statistics, \
-    print_prediction_statistics, draw_roc_curve_plotlib
+from src.classification_print_tools import print_graph_graphviz, print_data_statistics, draw_roc_curve_plotlib
 from sklearn.utils import shuffle
 from sklearn import tree
 from sklearn import ensemble
@@ -12,10 +11,10 @@ import pickle
 # CONFIG
 training_test_ratio = 0.7
 negative_samples_ratio = 800
-shuffle_data = True
+shuffle_data = False
 print_graph = False
 draw_roc_curve = True
-file_name = 'output/training-full.pickle'
+file_name = 'output/training-full-shuffled.pickle'
 
 
 def limit_negative_samples(features, targets, negative_count):
@@ -58,20 +57,22 @@ with open(file_name, 'rb') as f:
 features = data[0]
 targets = data[1]
 
-if shuffle_data:
-    features, targets = shuffle(features, targets)
+# if shuffle_data:
+#     features, targets = shuffle(features, targets)
 
-for [limit, color] in [[600, 'blue'], [700, 'darkorange'], [2000, 'red'], [10000, 'brown'], [90000, 'green']]:
+for [limit, color] in [[600, 'blue'], [700, 'darkorange'], [2000, 'red'], [10000, 'brown']]:
     train_data, test_data = split_data(features, targets, training_test_ratio, limit)
-    clf = ensemble.RandomForestClassifier()
+    # clf = ensemble.RandomForestClassifier()
     # clf = neighbors.KNeighborsClassifier(n_neighbors=4)
     # clf = tree.DecisionTreeClassifier()
-    # clf = linear_model.LogisticRegression()
+    clf = linear_model.LogisticRegression(solver='lbfgs')
+
+    plt.title('LogisticRegression, solver=lbfgs, regularization=L2')
+
     clf = clf.fit(train_data[0], train_data[1])
 
     predictions = clf.predict(test_data[0])
-
-    print_prediction_statistics(predictions, test_data, limit)
+    # predictions = [x[0] for]
 
     if draw_roc_curve:
         draw_roc_curve_plotlib(test_data[1], predictions, limit, color)
@@ -79,7 +80,8 @@ for [limit, color] in [[600, 'blue'], [700, 'darkorange'], [2000, 'red'], [10000
     if print_graph:
         print_graph_graphviz(clf)
 
-plt.show()
+# plt.show()
+plt.savefig("output/graphs/logreg-lbfgs-l2.svg")
 
 
 
