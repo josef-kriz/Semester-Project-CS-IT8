@@ -109,3 +109,11 @@ dumper/misfireClusters/*
 !dumper/misfireClusters/.gitkeep
 ecpower/out/*
 !ecpower/out/.gitkeep
+
+.idea/
+
+
+training-data/iris
+training-data/iris.pdf
+training-data/training.pickle
+
