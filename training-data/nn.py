@@ -6,6 +6,7 @@ from keras.models import Sequential
 from keras.layers import Dense, InputLayer
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_score
+from src.classification_data_tools import limit_negative_samples
 import pickle
 
 cfg = Config()
@@ -22,6 +23,8 @@ def FetchData(cfg):
         training_targets = targets[:int(len(data[1]) * cfg.TRAINING_CUT) - 1]
         test_features = features[int(len(data[0]) * cfg.TRAINING_CUT):]
         test_targets = targets[int(len(data[1]) * cfg.TRAINING_CUT):]
+
+        training_features, training_targets = limit_negative_samples(training_features, training_targets, 1000)
 
     return training_features, training_targets, test_features, test_targets
 
