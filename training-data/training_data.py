@@ -159,7 +159,7 @@ def sampling_step(machine_id, ref_datetime, ref_settings):
     # type of machine
     step_data.extend(get_machine_type(machine_id))
 
-    step_target = get_target(ref_datetime, machine_id)
+    step_target = get_target(ref_datetime, machine_id, ref_settings['misfire_interval'])
     # print(step_data, step_target)
     return step_data, step_target
 
