@@ -3,9 +3,10 @@ import numpy as np
 from itertools import product
 from sklearn.utils import shuffle
 from sklearn.metrics import precision_recall_fscore_support
-from keras import callbacks
+from keras import callbacks, regularizers
 from keras.models import Sequential
 from keras.layers import Dense, InputLayer
+from keras import backend as K
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 from src.classification_data_tools import limit_negative_samples
@@ -36,17 +37,24 @@ def FetchData(cfg):
 
     return training_features, training_targets, test_features, test_targets
 
-def BuildModel(cfg, input_shape, iftest, hidden_layers):
+def BuildModel(cfg, input_shape, iftest, hidden_layers, regularizer, activation_function):
+    if regularizer == 'l1':
+        regularizer = regularizers.l1(0.05)
+    elif regularizer == 'l2':
+        regularizer = regularizers.l2(0.05)
+    elif regularizer == 'none':
+        regularizer = None
+
     model = Sequential()
 
     model.add(InputLayer(input_shape))
 
     if iftest:
         for layer in hidden_layers:
-            model.add(Dense(layer, use_bias=cfg.BIAS, activation=cfg.ACTIVATION_FUNCTION))
+            model.add(Dense(layer, use_bias=cfg.BIAS, kernel_regularizer=regularizer, activation=activation_function))
     else:
         for layer in cfg.HIDDEN_LAYERS:
-            model.add(Dense(layer, use_bias=cfg.BIAS, activation=cfg.ACTIVATION_FUNCTION))
+            model.add(Dense(layer, use_bias=cfg.BIAS, kernel_regularizer=cfg.REGULARIZER, activation=cfg.ACTIVATION_FUNCTION))
 
     model.add(Dense(1, use_bias=cfg.BIAS, activation='sigmoid'))
 
@@ -54,14 +62,14 @@ def BuildModel(cfg, input_shape, iftest, hidden_layers):
 
     return model
 
-def TrainModel(cfg, model, training_features, training_targets):
+def TrainModel(cfg, model, training_features, training_targets, cw):
     if cfg.EARLY_STOPPING:
         es = callbacks.EarlyStopping(monitor='val_loss', min_delta=0, patience=cfg.EARLY_STOPPING_PATIENCE, verbose=0, mode='min')
 
-        model.fit(training_features, training_targets, epochs=cfg.EPOCHS, callbacks=[es], class_weight=cfg.CLASS_WEIGHT, batch_size=cfg.BATCH_SIZE, verbose=1,
+        model.fit(training_features, training_targets, epochs=cfg.EPOCHS, callbacks=[es], class_weight=cw, batch_size=cfg.BATCH_SIZE, verbose=1,
                         validation_split=1 - cfg.TRAINING_CUT)
     else:
-        model.fit(training_features, training_targets, epochs=cfg.EPOCHS, class_weight=cfg.CLASS_WEIGHT,
+        model.fit(training_features, training_targets, epochs=cfg.EPOCHS, class_weight=cw,
                   batch_size=cfg.BATCH_SIZE, verbose=1,
                   validation_split=1 - cfg.TRAINING_CUT)
 
@@ -76,7 +84,9 @@ def EvaluateModel(cfg, model, test_features, test_targets):
         else:
             prediction[0] = 1
 
-    print(precision_recall_fscore_support(test_targets, predictions, average='macro'))
+    precision, recall, fscore, support = precision_recall_fscore_support(test_targets, predictions, average='macro')
+    f1 = 2 * ((precision * recall) / (precision + recall))
+    print(str(precision) + ', ' + str(recall) + ', ' + str(f1))
 
 def EvaluateModelTest(cfg, model, test_features, test_targets):
     predictions = model.predict(test_features)
@@ -87,7 +97,9 @@ def EvaluateModelTest(cfg, model, test_features, test_targets):
         else:
             prediction[0] = 1
 
-    return precision_recall_fscore_support(test_targets, predictions, average='macro')
+    precision, recall, fscore, support = precision_recall_fscore_support(test_targets, predictions, average='macro')
+    f1 = 2 * ((precision * recall) / (precision + recall))
+    return precision, recall, f1
 
     #estimator = KerasClassifier(build_fn=model, epochs=4, batch_size=32, verbose=1)
     #kfold = StratifiedKFold(n_splits=10, shuffle=True)
@@ -106,43 +118,60 @@ input_shape = (len(training_features[0]),)
 
 if cfg.MULTIPLE_ARCHITECTURES:
     best_architecture = []
+    best_regularizer = ''
+    best_activation_function = ''
     best_precision = 0
     best_recall = 0
     best_f1 = 0
+
     count_max = 0
     counter = 0
 
     architecture_list = []
 
-    for i in range(2, cfg.TEST_LAYERS + 1):
+    for i in range(cfg.TEST_LAYERS_MIN, cfg.TEST_LAYERS_MAX + 1):
         prod = list(product(cfg.TEST_NOTES, repeat = i))
         architecture_list.extend(prod)
 
-    count_max = len(architecture_list)
+    count_max = len(architecture_list) * len(cfg.TEST_REGULARIZERS) * len(cfg.TEST_ACTIVATION_FUNCTIONS) * len(cfg.TEST_CLASS_WEIGHTS)
 
-    for architecture in architecture_list:
-        print(str(counter) + '/' + str(count_max))
+    with open('output/wrapper_test.txt', 'a') as f:
+        for architecture in architecture_list:
+            for regularizer in cfg.TEST_REGULARIZERS:
+                for activation_function in cfg.TEST_ACTIVATION_FUNCTIONS:
+                    for class_weight in cfg.TEST_CLASS_WEIGHTS:
+                        print(str(counter) + '/' + str(count_max))
 
-        model = BuildModel(cfg, input_shape, True, list(architecture))
-        model = TrainModel(cfg, model, training_features, training_targets)
-        precision, recall, f1, none = EvaluateModelTest(cfg, model, test_features, test_targets)
+                        model = BuildModel(cfg, input_shape, True, list(architecture), regularizer, activation_function)
+                        model_trained = TrainModel(cfg, model, training_features, training_targets, {0: 1., 1: class_weight})
+                        precision, recall, f1 = EvaluateModelTest(cfg, model_trained, test_features, test_targets)
 
-        if f1 > best_f1:
-            best_precision = precision
-            best_recall = recall
-            best_f1 = f1
-            best_architecture = list(architecture)
+                        if recall > best_recall:
+                            best_precision = precision
+                            best_recall = recall
+                            best_f1 = f1
+                            best_architecture = list(architecture)
+                            best_regularizer = regularizer
+                            best_activation_function = activation_function
 
-        counter += 1
+                        f.write('LAYERS: ' + str(list(architecture)) + ' -- CLASS_WEIGHTS: ' + str(class_weight) + '\n')
+                        f.write('REGULARIZER: ' + regularizer + ' -- ACTIVATION: ' + activation_function + '\n')
+                        f.write('PRECISION: ' + str(precision) + ', RECALL: ' + str(recall) + ', F1: ' + str(f1) + '\n')
+                        f.write('--------------------------------------------------------------------------\n')
+
+                        K.clear_session()
+                        counter += 1
 
     print('BEST ARCHITECTURE:')
     print(best_architecture)
+    print(best_regularizer)
+    print(best_activation_function)
     print('precision: ' + str(best_precision) + ', recall: ' + str(best_recall) + ', f1: ' + str(best_f1))
 
 
 else:
-    model = BuildModel(cfg, input_shape, False, 0)
-    model = TrainModel(cfg, model, training_features, training_targets)
+    model = BuildModel(cfg, input_shape, False, 0, 0, 0)
+    model = TrainModel(cfg, model, training_features, training_targets, cfg.CLASS_WEIGHT)
     EvaluateModel(cfg, model, test_features, test_targets)
 
 
