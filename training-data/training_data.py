@@ -148,7 +148,8 @@ def sampling_step(machine_id, ref_datetime, ref_settings):
         ref_datetime,
         machine_id,
         ref_settings['sensors'],
-        ref_settings['sensors_samples']
+        ref_settings['sensors_samples'],
+        True  # aggregate?
     ))
     # life span
     step_data.extend(get_life_span(ref_datetime, machine_id))
@@ -160,7 +161,7 @@ def sampling_step(machine_id, ref_datetime, ref_settings):
     step_data.extend(get_machine_type(machine_id))
 
     step_target = get_target(ref_datetime, machine_id, ref_settings['misfire_interval'])
-    # print(step_data, step_target)
+    # print(len(step_data), step_data, step_target)
     return step_data, step_target
 
 

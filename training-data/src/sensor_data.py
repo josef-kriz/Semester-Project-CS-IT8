@@ -1,5 +1,6 @@
 from src.chpdb import cursor
 import datetime
+import numpy as np
 from src.parser import parse_value
 
 
@@ -60,15 +61,32 @@ def parse_dates(dates, reference):
     return intervals
 
 
+def aggregate_values(parsed_sensors, sensor_readings_count):
+    result = []
+
+    for i in range(0, len(parsed_sensors), sensor_readings_count):
+        aggregated = []
+        for j in range(sensor_readings_count):
+            aggregated.append(parsed_sensors[i + j])
+        # result.append(np.mean(aggregated))  # arithmetic mean
+        result.append(np.var(aggregated))  # variance
+
+    return result
+
+
 # function retrieves specified number of sensor readings prior to a specified time
-def fetch_sensors(datetime, machine_id, sensor_names, sensor_readings_count):
+def fetch_sensors(datetime, machine_id, sensor_names, sensor_readings_count, aggregate=False):
     res = []
     dates, sensor_readings = get_sensor_data(datetime, machine_id, sensor_names, sensor_readings_count)
 
     if not dates and sensor_readings:
         return []
 
-    res.extend(parse_sensors(sensor_readings, sensor_names))
+    result_sensors = parse_sensors(sensor_readings, sensor_names)
+    if aggregate:
+        result_sensors = aggregate_values(result_sensors, sensor_readings_count)
+
+    res.extend(result_sensors)
     res.extend(parse_dates(dates, datetime))
 
     return res
