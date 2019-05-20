@@ -11,8 +11,9 @@ from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 from src.classification_data_tools import limit_negative_samples
 import pickle
+from tensorflow import set_random_seed
+import tensorflow as tf
 
-np.random.seed(7)
 cfg = Config()
 
 
@@ -88,6 +89,15 @@ def EvaluateModel(cfg, model, test_features, test_targets):
     f1 = 2 * ((precision * recall) / (precision + recall))
     print(str(precision) + ', ' + str(recall) + ', ' + str(f1))
 
+
+def reset_keras():
+    sess = K.get_session()
+    K.clear_session()
+    sess.close()
+    sess = K.get_session()
+    np.random.seed(1)
+    tf.set_random_seed(2)
+
 def EvaluateModelTest(cfg, model, test_features, test_targets):
     predictions = model.predict(test_features)
 
@@ -141,6 +151,8 @@ if cfg.MULTIPLE_ARCHITECTURES:
             for regularizer in cfg.TEST_REGULARIZERS:
                 for activation_function in cfg.TEST_ACTIVATION_FUNCTIONS:
                     for class_weight in cfg.TEST_CLASS_WEIGHTS:
+                        reset_keras()
+
                         print(str(counter) + '/' + str(count_max))
 
                         model = BuildModel(cfg, input_shape, True, list(architecture), regularizer, activation_function)
@@ -173,7 +185,6 @@ if cfg.MULTIPLE_ARCHITECTURES:
 
                         f.write(str(la1) + ',' + str(la2) + ',' + str(la3) + ',' + str(la4) + ',' + str(la5) + ',' + str(class_weight) + ',' + regularizer + ',' + activation_function + ',' + str(precision) + ',' + str(recall) + ',' + str(f1) + '\n')
 
-                        K.clear_session()
                         counter += 1
 
     print('BEST ARCHITECTURE:')
@@ -184,6 +195,7 @@ if cfg.MULTIPLE_ARCHITECTURES:
 
 
 else:
+    reset_keras()
     model = BuildModel(cfg, input_shape, False, 0, 0, 0)
     model = TrainModel(cfg, model, training_features, training_targets, cfg.CLASS_WEIGHT)
     EvaluateModel(cfg, model, test_features, test_targets)
