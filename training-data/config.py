@@ -4,16 +4,17 @@ class Config:
         #False if running HIDDEN_LAYERS from Config.
         self.MULTIPLE_ARCHITECTURES = True
         #if MULTIPLE_ARCHITECTURES is True, all of these will run instead of other Configs.
-        self.TEST_LAYERS_MIN = 2
-        self.TEST_LAYERS_MAX = 5
+        self.TEST_LAYERS_MIN = 2 #NOTE, if changing this, u need to change what is written to file.
+        self.TEST_LAYERS_MAX = 5 #NOTE, if changing this, u need to change what is written to file.
         self.TEST_NOTES = [32, 128, 256]
         self.TEST_REGULARIZERS = ['none', 'l1', 'l2']
         self.TEST_ACTIVATION_FUNCTIONS = ['relu', 'sigmoid', 'tanh']
-        self.TEST_CLASS_WEIGHTS = [1., 10., 25., 50., 100.]
+        self.TEST_CLASS_WEIGHTS = [1., 25., 50., 100.]
+
         #if not testing multiple configurations, these will be used.
-        self.HIDDEN_LAYERS = [32, 32]
+        self.HIDDEN_LAYERS = [128, 128, 128, 256, 32] #0.656
         self.REGULARIZER = None
-        self.ACTIVATION_FUNCTION = 'relu'
+        self.ACTIVATION_FUNCTION = 'tanh'
         self.CLASS_WEIGHT = {0: 1., 1: 30.}
 
         # This is not the amount of epochs, but the cap (if using early stopping)

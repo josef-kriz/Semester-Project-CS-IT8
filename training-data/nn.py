@@ -135,7 +135,8 @@ if cfg.MULTIPLE_ARCHITECTURES:
 
     count_max = len(architecture_list) * len(cfg.TEST_REGULARIZERS) * len(cfg.TEST_ACTIVATION_FUNCTIONS) * len(cfg.TEST_CLASS_WEIGHTS)
 
-    with open('output/wrapper_test.txt', 'a') as f:
+    with open('output/wrapper_test_2.csv', 'a') as f:
+        f.write('1,2,3,4,5,cw,regularizer,activation,precision,recall,f1\n')
         for architecture in architecture_list:
             for regularizer in cfg.TEST_REGULARIZERS:
                 for activation_function in cfg.TEST_ACTIVATION_FUNCTIONS:
@@ -154,10 +155,23 @@ if cfg.MULTIPLE_ARCHITECTURES:
                             best_regularizer = regularizer
                             best_activation_function = activation_function
 
-                        f.write('LAYERS: ' + str(list(architecture)) + ' -- CLASS_WEIGHTS: ' + str(class_weight) + '\n')
-                        f.write('REGULARIZER: ' + regularizer + ' -- ACTIVATION: ' + activation_function + '\n')
-                        f.write('PRECISION: ' + str(precision) + ', RECALL: ' + str(recall) + ', F1: ' + str(f1) + '\n')
-                        f.write('--------------------------------------------------------------------------\n')
+                        la1 = list(architecture)[0]
+                        la2 = 0
+                        la3 = 0
+                        la4 = 0
+                        la5 = 0
+
+
+                        if len(list(architecture)) >= 2:
+                            la2 = list(architecture)[1]
+                        if len(list(architecture)) >= 3:
+                            la3 = list(architecture)[2]
+                        if len(list(architecture)) >= 4:
+                            la4 = list(architecture)[3]
+                        if len(list(architecture)) >= 5:
+                            la5 = list(architecture)[4]
+
+                        f.write(str(la1) + ',' + str(la2) + ',' + str(la3) + ',' + str(la4) + ',' + str(la5) + ',' + str(class_weight) + ',' + regularizer + ',' + activation_function + ',' + str(precision) + ',' + str(recall) + ',' + str(f1) + '\n')
 
                         K.clear_session()
                         counter += 1
