@@ -32,7 +32,7 @@ def get_sensor_data(date, machineID, sensors, count):
 
 
 # iterates over the database values and puts the values in an array
-def parse_sensors(sensor_rows, sensor_names):
+def parse_sensors(sensor_rows, sensor_names, aggregate):
     values = []
     i = 0
     # iterate over all sensor names to be produced
@@ -45,9 +45,13 @@ def parse_sensors(sensor_rows, sensor_names):
             if (None in value) or (value is None):
                 raise Exception("Invalid value found in this sample. Column name {}!".format(sensor_name))
 
-            # if multiple values are returned, use an average value
-            value = sum(value) / len(value)
-            values.append(value)
+            # if aggregation is enabled, output all values
+            # otherwise just output average
+            if aggregate:
+                values.extend(value)
+            else:
+                value = sum(value) / len(value)
+                values.append(value)
         i += 1
     return values
 
@@ -82,7 +86,7 @@ def fetch_sensors(datetime, machine_id, sensor_names, sensor_readings_count, agg
     if not dates and sensor_readings:
         return []
 
-    result_sensors = parse_sensors(sensor_readings, sensor_names)
+    result_sensors = parse_sensors(sensor_readings, sensor_names, aggregate)
     if aggregate:
         result_sensors = aggregate_values(result_sensors, sensor_readings_count)
 
