@@ -145,7 +145,7 @@ if cfg.MULTIPLE_ARCHITECTURES:
 
     count_max = len(architecture_list) * len(cfg.TEST_REGULARIZERS) * len(cfg.TEST_ACTIVATION_FUNCTIONS) * len(cfg.TEST_CLASS_WEIGHTS)
 
-    with open('output/wrapper_test_2.csv', 'a') as f:
+    with open('output/wrapper_test_mean.csv', 'a') as f:
         f.write('1,2,3,4,5,cw,regularizer,activation,precision,recall,f1\n')
         for architecture in architecture_list:
             for regularizer in cfg.TEST_REGULARIZERS:

@@ -48,7 +48,7 @@ def parse_sensors(sensor_rows, sensor_names, aggregate):
             # if aggregation is enabled, output all values
             # otherwise just output average
             if aggregate:
-                values.extend(value)
+                values.append(value)
             else:
                 value = sum(value) / len(value)
                 values.append(value)
@@ -67,14 +67,12 @@ def parse_dates(dates, reference):
 
 def aggregate_values(parsed_sensors, sensor_readings_count):
     result = []
-
     for i in range(0, len(parsed_sensors), sensor_readings_count):
         aggregated = []
         for j in range(sensor_readings_count):
-            aggregated.append(parsed_sensors[i + j])
-        # result.append(np.mean(aggregated))  # arithmetic mean
-        result.append(np.var(aggregated))  # variance
-
+             aggregated.extend(parsed_sensors[i + j])
+        result.append(np.mean(aggregated))  # arithmetic mean
+        # result.append(np.var(aggregated))  # variance
     return result
 
 

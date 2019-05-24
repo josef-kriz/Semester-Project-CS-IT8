@@ -42,17 +42,17 @@ def run_experiment(clf, title, file_name, ratio, limits, test_on_train=False, sc
 
 # CONFIG
 training_test_ratio = 0.7
-shuffle_data = False
+shuffle_data = True
 print_graph = False
 draw_roc_curve = True
-file_name = 'output/full-5days-final-shuffled.pickle'
-output_path_base = 'output/graphs/5d/5d-more-'
+file_name = 'output/190523-full-5d-aggr-mean.pickle'
+output_path_base = 'output/graphs/final-mean-5d/final-'
 negative_sample_limits = [
-    [20000, 'blue'],
-    [40000, 'darkorange'],
-    [60000, 'green'],
-    [100000, 'red'],
-    [130000, 'brown']
+    [800, 'blue'],
+    [1000, 'darkorange'],
+    [1500, 'green'],
+    [2000, 'red'],
+    [10000, 'brown']
 ]
 
 with open(file_name, 'rb') as f:
@@ -66,11 +66,13 @@ print_data_split_statistics(targets)
 if shuffle_data:
     features, targets = shuffle(features, targets)
 
+# pickle.dump([features, targets], open('output/final-variance-shuffled.pickle', 'wb'))
+
 for limit in [None, 4, 8, 16, 32]:
     run_experiment(
         tree.DecisionTreeClassifier(max_depth=limit),
         "DecisionTreeClassifier, max_depth={}".format(limit),
-        "{}tree-d{}-train.pdf".format(output_path_base, limit),
+        "{}tree-d{}.pdf".format(output_path_base, limit),
         training_test_ratio,
         negative_sample_limits,
     )
@@ -103,19 +105,19 @@ run_experiment(
     negative_sample_limits
 )
 
-run_experiment(
-    neighbors.KNeighborsClassifier(n_neighbors=4),
-    "KNeighborsClassifier",
-    "{}knn-4.pdf".format(output_path_base),
-    training_test_ratio,
-    negative_sample_limits
-)
-
-for [solver, penalty] in [['liblinear', 'l2'], ['lbfgs', 'none'], ['saga', 'elasticnet'], ['liblinear', 'l1']]:
-    run_experiment(
-        linear_model.LogisticRegression(solver=solver, penalty=penalty, l1_ratio=0.5),
-        "LogisticRegression, solver={}, regularization={}".format(solver, penalty.upper()),
-        "{}logreg-{}-{}.pdf".format(output_path_base, solver, penalty.upper()),
-        training_test_ratio,
-        negative_sample_limits
-    )
+# run_experiment(
+#     neighbors.KNeighborsClassifier(n_neighbors=4),
+#     "KNeighborsClassifier",
+#     "{}knn-4.pdf".format(output_path_base),
+#     training_test_ratio,
+#     negative_sample_limits
+# )
+#
+# for [solver, penalty] in [['liblinear', 'l2'], ['lbfgs', 'none'], ['saga', 'elasticnet'], ['liblinear', 'l1']]:
+#     run_experiment(
+#         linear_model.LogisticRegression(solver=solver, penalty=penalty, l1_ratio=0.5),
+#         "LogisticRegression, solver={}, regularization={}".format(solver, penalty.upper()),
+#         "{}logreg-{}-{}.pdf".format(output_path_base, solver, penalty.upper()),
+#         training_test_ratio,
+#         negative_sample_limits
+#     )
