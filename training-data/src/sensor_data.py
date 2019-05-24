@@ -67,14 +67,12 @@ def parse_dates(dates, reference):
 
 def aggregate_values(parsed_sensors, sensor_readings_count):
     result = []
-
-    for i in range(0, len(parsed_sensors)):
-        # aggregated = []
-        # for j in range(sensor_readings_count):
-        #     aggregated.append(parsed_sensors[i + j])
-        # result.append(np.mean(parsed_sensors[i]))  # arithmetic mean
-        result.append(np.var(parsed_sensors[i]))  # variance
-
+    for i in range(0, len(parsed_sensors), sensor_readings_count):
+        aggregated = []
+        for j in range(sensor_readings_count):
+             aggregated.extend(parsed_sensors[i + j])
+        result.append(np.mean(aggregated))  # arithmetic mean
+        # result.append(np.var(aggregated))  # variance
     return result
 
 
